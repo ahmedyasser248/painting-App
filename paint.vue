@@ -1,6 +1,11 @@
 <template>
 <div>yala bena</div>
 <button @click="ChangeTool('')" type="button">Select</button>
+<button @click="ChangeTool('square')" type="button">square</button>
+<button @click="ChangeTool('circle')" type="button">circle</button>
+ <button @click="ChangeTool('polygon')" type="button">polygon</button>
+ <button @click="ChangeTool('rectangle')" type="button">rectangle</button>
+ <button @click="ChangeTool('line')" type="button">line</button>
  <canvas id ="my-canvas" width="600" height="600"></canvas>   
 </template>
 
@@ -12,6 +17,7 @@ export default {
     
     data() {
         return {
+            inf:1000,
             counter:0,
             shapes :[],
             polPoints:[],
@@ -274,7 +280,7 @@ export default {
            
             
         },
-    /*
+    
 
     onSegment(p, q, r)  
              { 
@@ -342,7 +348,7 @@ export default {
         { 
             return false; 
         } 
-        let extreme = new polygonPoint(Infinity, p.y); 
+        let extreme = new polygonPoint(this.inf, p.y); 
   
         let count = 0, i = 0; 
         do 
@@ -366,7 +372,7 @@ export default {
   
         
         return (count % 2 == 1); 
-    } , */
+    } , 
   
         
         Selection(){
@@ -415,7 +421,7 @@ export default {
                           console.log("iam a ellipse of id" + currShape.id)
                           break
                     }
-                /* else if(currShape instanceof polygon) { // polygon Detection
+                 else if(currShape instanceof polygon) { // polygon Detection
                     
                     let currClick=new polygonPoint(this.MouseDownPos.x,this.MouseDownPos.y)
                     console.log(currShape.polpoints)
@@ -425,7 +431,7 @@ export default {
                     }  
    
 
-                    }*/  
+                    }
                     
              
                   
