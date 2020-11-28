@@ -1,22 +1,22 @@
 <template>
 <div>yala bena</div>
+<button @click="ChangeTool('')" type="button">Select</button>
  <canvas id ="my-canvas" width="600" height="600"></canvas>   
 </template>
 
 <script>
-import {polygonPoint} from './classes.js'
+import {polygonPoint,square,circle,rectangle, line,ellipse,polygon} from './classes.js'
 
 export default {
     name:'paintp',
     
     data() {
         return {
-           
-            rectangles :[],
-            circles :[],
-            ellipses:[],
-            polygons:[],
-            currentTool:'circle',
+            counter:0,
+            shapes :[],
+            polPoints:[],
+            recentShape:'',
+            currentTool:'polygon',
             canvas:'',
             ctx:'',
             savedImageData:'',
@@ -25,7 +25,7 @@ export default {
             fillColor:'black',
             canvasWidth:600,
             canvasHeight:600,
-            polygonSides:4,
+            polygonSides:6,
             usingBrush:false,
             brushXPoints:[],
             brushYPoints:[],
@@ -67,17 +67,16 @@ export default {
             $vm.canvas.addEventListener("mousedown",$vm.ReactToMouseDown)
             $vm.canvas.addEventListener("mousemove",$vm.ReactToMouseMove)
             $vm.canvas.addEventListener("mouseup",$vm.ReactToMouseUp)
-
     },
     methods:{
         ChangeTool(toolClicked){
             this.currentTool=toolClicked
+            console.log(toolClicked)
         },
         getMousePosition(x,y){
             let canvasSizeData=this.canvas.getBoundingClientRect()
             return{x: (x - canvasSizeData.left) * (this.canvas.width / canvasSizeData.width),
         y: (y - canvasSizeData.top)  * (this.canvas.height / canvasSizeData.height)
-
             }
         },
         saveCanvasImage(){
@@ -132,7 +131,8 @@ export default {
         },
         getPolygon(){
             let polygonPoints=this.getPolygonPoints()
-            console.log(polygonPoints)
+            this.polPoints=polygonPoints
+            //console.log(polygonPoints)
             this.ctx.beginPath()
             this.ctx.moveTo(polygonPoints[0].x,polygonPoints[0].y)
             for(let i=1;i<this.polygonSides; i++){
@@ -153,11 +153,15 @@ export default {
                 this.ctx.stroke()
             }else if(this.currentTool==="rectangle"){
                 this.ctx.strokeRect(this.ShapeBoundingBox.left,this.ShapeBoundingBox.top,this.ShapeBoundingBox.width,this.ShapeBoundingBox.height)
-            }else if(this.currentTool==="circle"){
+            }else if(this.currentTool==="square"){
+                this.ctx.strokeRect(this.ShapeBoundingBox.left,this.ShapeBoundingBox.top,this.ShapeBoundingBox.width,this.ShapeBoundingBox.width)
+            }
+            else if(this.currentTool==="circle"){
                 let radius =this.ShapeBoundingBox.width
                 this.ctx.beginPath()
                 this.ctx.arc(this.MouseDownPos.x,this.MouseDownPos.y,radius,0,Math.PI*2)
                 this.ctx.stroke()
+               
             }
             else if(this.currentTool==="ellipse"){
                 console.log('i reached here')
@@ -203,6 +207,9 @@ export default {
             if(this.currentTool==='brush'){
                 this.usingBrush=true
                 this.AddBrushPoint(this.Location.x,this.Location.y)
+            }else if(this.currentTool===''){
+
+                    this.Selection(e)
             }
         },
         ReactToMouseMove(e){
@@ -222,15 +229,209 @@ export default {
             }
         },
         ReactToMouseUp(e){
+            if(this.currentTool != '') this.AddRecentShape()
+
             this.canvas.style.cursor="default"
             this.Location=this.getMousePosition(e.clientX,e.clientY)
             this.RedrawCanvasImage()
             this.updateRubberbandOnMove(this.Location)
+            this.ShapeBoundingBox.width=0
+            this.ShapeBoundingBox.height=0
             this.dragging=false
             this.usingBrush=false
+        },
+
+        AddRecentShape(){
+            console.log(this.ShapeBoundingBox.width)
+            console.log(this.ShapeBoundingBox.height)
+            if(this.currentTool==="circle" && this.ShapeBoundingBox.width != 0){
+                  
+                  this.shapes.push(new circle(this.MouseDownPos.x,this.MouseDownPos.y,this.ShapeBoundingBox.width,this.counter++))
+            }
+            else if(this.currentTool==="square" && this.ShapeBoundingBox.width != 0){
+                  
+                  this.shapes.push(new square(this.MouseDownPos.x,this.MouseDownPos.y,this.ShapeBoundingBox.width,this.counter++))
+            }
+            else if(this.currentTool==="rectangle" && this.ShapeBoundingBox.width != 0 &&this.ShapeBoundingBox.height != 0){
+                  
+                  this.shapes.push(new rectangle(this.MouseDownPos.x,this.MouseDownPos.y,this.ShapeBoundingBox.width,this.ShapeBoundingBox.height,this.counter++))
+            }
+            
+            else if(this.currentTool==="line" && this.ShapeBoundingBox.width != 0 &&this.ShapeBoundingBox.height != 0){
+                  
+                  this.shapes.push(new line(this.MouseDownPos.x,this.MouseDownPos.y,this.Location.x,this.Location.y,this.counter++))
+            }
+            else if(this.currentTool==="ellipse" && this.ShapeBoundingBox.width != 0 &&this.ShapeBoundingBox.height != 0){
+                  
+                  this.shapes.push(new ellipse(this.MouseDownPos.x,this.MouseDownPos.y,this.ShapeBoundingBox.width/2,this.ShapeBoundingBox.height/2,this.counter++))
+            }         
+            else if(this.currentTool==="polygon" && this.ShapeBoundingBox.width != 0 &&this.ShapeBoundingBox.height != 0){
+                  
+                  
+                  this.shapes.push(new polygon(this.polPoints,this.counter++))
+            
+            }
+           
+            
+        },
+    /*
+
+    onSegment(p, q, r)  
+             { 
+        if (q.x <= Math.max(p.x, r.x) && 
+            q.x >= Math.min(p.x, r.x) && 
+            q.y <= Math.max(p.y, r.y) && 
+            q.y >= Math.min(p.y, r.y)) 
+            { 
+            return true; 
+             } 
+            return false; 
+             } ,
+
+        orientation(p,q,r)  
+                    { 
+             
+            let val = (q.y - p.y) * (r.x - q.x) 
+                    - (q.x - p.x) * (r.y - q.y); 
+    
+            if (val == 0)  
+            { 
+                return 0; 
+            } 
+            return (val > 0) ? 1 : 2;  
+            } ,
+
+         doIntersect(p1,q1,p2,q2)  {
+
+        let o1 = this.orientation(p1, q1, p2) 
+        let o2 = this.orientation(p1, q1, q2) 
+        let o3 = this.orientation(p2, q2, p1) 
+        let o4 = this.orientation(p2, q2, q1)
+  
+        if (o1 != o2 && o3 != o4) 
+        {   
+            console.log(true)
+            return true; 
+        } 
+  
+        if (o1 == 0 &&this.onSegment(p1, p2, q1))  
+        { console.log(true)
+            return true; 
+        } 
+
+        if (o2 == 0 && this.onSegment(p1, q2, q1))  
+        { console.log(true)
+            return true; 
+        } 
+  
+        if (o3 == 0 && this.onSegment(p2, p1, q2)) 
+        { console.log(true)
+            return true; 
+        } 
+        if (o4 == 0 && this.onSegment(p2, q1, q2)) 
+        { console.log(true)
+            return true; 
+        } console.log(false)
+        return false;  
+          } ,
+
+
+     isInside(polygon,n,p)   { 
+        
+        if (n < 3)  
+        { 
+            return false; 
+        } 
+        let extreme = new polygonPoint(Infinity, p.y); 
+  
+        let count = 0, i = 0; 
+        do 
+        { 
+            let next = (i + 1) % n; 
+  
+
+            if (this.doIntersect(polygon[i], polygon[next], p, extreme))  
+            { 
+
+                if (this.orientation(polygon[i], p, polygon[next]) == 0) 
+                { 
+                    return this.onSegment(polygon[i], p, 
+                                     polygon[next]); 
+                } 
+  
+                count++; 
+            } 
+            i = next; 
+        } while (i != 0); 
+  
+        
+        return (count % 2 == 1); 
+    } , */
+  
+        
+        Selection(){
+       
+           console.log(this.shapes.length)
+           
+           let i = this.shapes.length-1
+             for( i ; i >=0 ; i--){               
+                let currShape=this.shapes[i]
+                 
+                 if(currShape instanceof circle){ //Circle Detection
+                
+                 let distance = (Math.sqrt(Math.pow((this.MouseDownPos.x-currShape.x),2)+Math.pow((this.MouseDownPos.y-currShape.y),2)))
+
+                 if(distance<=currShape.r){
+                      console.log("iam aCircle of id" + currShape.id)
+                  }
+                  break
+                  }
+                else if(currShape instanceof square) { // Square Detection
+                      if(this.MouseDownPos.x >= currShape.x && this.MouseDownPos.x <= currShape.x+currShape.length && this.MouseDownPos.y >= currShape.y && this.MouseDownPos.y <= currShape.y+currShape.length){
+                          console.log("iam a square of id" + currShape.id)
+                      }
+                    break
+                  }
+                else if(currShape instanceof rectangle) { // Square Detection
+                      if(this.MouseDownPos.x >= currShape.x && this.MouseDownPos.x <= currShape.x+currShape.width && this.MouseDownPos.y >= currShape.y && this.MouseDownPos.y <= currShape.y+currShape.height){
+                          console.log("iam a rectangle of id" + currShape.id)
+                      }
+                      break
+                  }
+                else if(currShape instanceof line) { // line Detection
+                        var slope = (currShape.p2y-currShape.p1y)/(currShape.p2x-currShape.p1x)
+                        console.log(this.MouseDownPos.y-currShape.p1y-slope*(this.MouseDownPos.x-currShape.p1x))
+                        console.log(this.MouseDownPos.y-currShape.p1y-slope*(this.MouseDownPos.x-currShape.p1x ))
+                        
+                        if(this.MouseDownPos.y-currShape.p1y - slope*(this.MouseDownPos.x-currShape.p1x )<= 5.0 ){
+                            console.log("iam a Line of id" + currShape.id)
+                        }
+                        break
+                  }
+                 else if(currShape instanceof ellipse) { // ellipse Detection
+
+                    console.log(Math.pow((this.MouseDownPos.x-currShape.x)/currShape.r1,2)+Math.pow((this.MouseDownPos.y-currShape.y)/currShape.r2,2))
+                      if(Math.pow((this.MouseDownPos.x-currShape.x)/currShape.r1,2)+Math.pow((this.MouseDownPos.y-currShape.y)/currShape.r2,2)<=1)
+                          console.log("iam a ellipse of id" + currShape.id)
+                          break
+                    }
+                /* else if(currShape instanceof polygon) { // polygon Detection
+                    
+                    let currClick=new polygonPoint(this.MouseDownPos.x,this.MouseDownPos.y)
+                    console.log(currShape.polpoints)
+                    if(this.isInside(currShape.polpoints,6,currClick)){
+
+                            console.log("iamPol"+currShape.id)
+                    }  
+   
+
+                    }*/  
+                    
+             
+                  
+            }
+
         }
-
-
 
 
     }
@@ -238,9 +439,7 @@ export default {
 </script>
 <style >
 #my-canvas{
-
     margin: auto;
     border :3px solid #000000;
-
 }
 </style>
