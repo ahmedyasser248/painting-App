@@ -170,7 +170,7 @@ export default {
                
             }
             else if(this.currentTool==="ellipse"){
-                console.log('i reached here')
+                
                 let radiusX = this.ShapeBoundingBox.width/2
                 let radiusY = this.ShapeBoundingBox.height/2
                 this.ctx.beginPath()
@@ -248,8 +248,7 @@ export default {
         },
 
         AddRecentShape(){
-            console.log(this.ShapeBoundingBox.width)
-            console.log(this.ShapeBoundingBox.height)
+
             if(this.currentTool==="circle" && this.ShapeBoundingBox.width != 0){
                   
                   this.shapes.push(new circle(this.MouseDownPos.x,this.MouseDownPos.y,this.ShapeBoundingBox.width,this.counter++))
@@ -316,28 +315,28 @@ export default {
   
         if (o1 != o2 && o3 != o4) 
         {   
-            console.log(true)
+           
             return true; 
         } 
   
         if (o1 == 0 &&this.onSegment(p1, p2, q1))  
-        { console.log(true)
+        { 
             return true; 
         } 
 
         if (o2 == 0 && this.onSegment(p1, q2, q1))  
-        { console.log(true)
+        {
             return true; 
         } 
   
         if (o3 == 0 && this.onSegment(p2, p1, q2)) 
-        { console.log(true)
+        { 
             return true; 
         } 
         if (o4 == 0 && this.onSegment(p2, q1, q2)) 
-        { console.log(true)
+        { 
             return true; 
-        } console.log(false)
+        } 
         return false;  
           } ,
 
@@ -377,10 +376,11 @@ export default {
         
         Selection(){
        
-           console.log(this.shapes.length)
            
-           let i = this.shapes.length-1
-             for( i ; i >=0 ; i--){               
+           
+            let i = this.shapes.length-1
+             for( i; i >=0 ; i--){  
+
                 let currShape=this.shapes[i]
                  
                  if(currShape instanceof circle){ //Circle Detection
@@ -389,45 +389,50 @@ export default {
 
                  if(distance<=currShape.r){
                       console.log("iam aCircle of id" + currShape.id)
+                      break
                   }
-                  break
+                  
                   }
                 else if(currShape instanceof square) { // Square Detection
                       if(this.MouseDownPos.x >= currShape.x && this.MouseDownPos.x <= currShape.x+currShape.length && this.MouseDownPos.y >= currShape.y && this.MouseDownPos.y <= currShape.y+currShape.length){
                           console.log("iam a square of id" + currShape.id)
+                          break
                       }
-                    break
+                    
                   }
                 else if(currShape instanceof rectangle) { // Square Detection
                       if(this.MouseDownPos.x >= currShape.x && this.MouseDownPos.x <= currShape.x+currShape.width && this.MouseDownPos.y >= currShape.y && this.MouseDownPos.y <= currShape.y+currShape.height){
                           console.log("iam a rectangle of id" + currShape.id)
+                          break
                       }
-                      break
+                      
                   }
                 else if(currShape instanceof line) { // line Detection
                         var slope = (currShape.p2y-currShape.p1y)/(currShape.p2x-currShape.p1x)
-                        console.log(this.MouseDownPos.y-currShape.p1y-slope*(this.MouseDownPos.x-currShape.p1x))
-                        console.log(this.MouseDownPos.y-currShape.p1y-slope*(this.MouseDownPos.x-currShape.p1x ))
+
                         
-                        if(this.MouseDownPos.y-currShape.p1y - slope*(this.MouseDownPos.x-currShape.p1x )<= 5.0 ){
+                        if(Math.abs(this.MouseDownPos.y-currShape.p1y - slope*(this.MouseDownPos.x-currShape.p1x ))<= 5.0 ){
                             console.log("iam a Line of id" + currShape.id)
+                            break
                         }
-                        break
+                        
                   }
                  else if(currShape instanceof ellipse) { // ellipse Detection
 
-                    console.log(Math.pow((this.MouseDownPos.x-currShape.x)/currShape.r1,2)+Math.pow((this.MouseDownPos.y-currShape.y)/currShape.r2,2))
-                      if(Math.pow((this.MouseDownPos.x-currShape.x)/currShape.r1,2)+Math.pow((this.MouseDownPos.y-currShape.y)/currShape.r2,2)<=1)
+                    
+                      if(Math.pow((this.MouseDownPos.x-currShape.x)/currShape.r1,2)+Math.pow((this.MouseDownPos.y-currShape.y)/currShape.r2,2)<=1){
                           console.log("iam a ellipse of id" + currShape.id)
                           break
+                      }
                     }
                  else if(currShape instanceof polygon) { // polygon Detection
                     
                     let currClick=new polygonPoint(this.MouseDownPos.x,this.MouseDownPos.y)
-                    console.log(currShape.polpoints)
+                    
                     if(this.isInside(currShape.polpoints,6,currClick)){
 
                             console.log("iamPol"+currShape.id)
+                            break
                     }  
    
 
