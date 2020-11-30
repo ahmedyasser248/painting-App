@@ -215,7 +215,7 @@ export default {
             }
         },
         drawDrag(object){
-            
+            this.ctx.lineWidth=2
             this.ctx.strokeStyle="black"
                 if(object instanceof circle){
                     object.x=this.Location.x
@@ -273,6 +273,7 @@ export default {
             
         },
         drawResize(object){
+            this.ctx.lineWidth=2
             this.ctx.fillStyle=this.fillColor
             this.ctx.strokeStyle="black"
                 if(object instanceof circle){
@@ -300,13 +301,12 @@ export default {
                     this.ctx.stroke()
                 }else if(object instanceof polygon){
                     this.updateRubberBandSizeData(this.Location)
-                    let angle = this.degreesToRadians(this.getAngleByXandY(this.Location.x,this.Location.y))
                     let radiusX = this.ShapeBoundingBox.width
                     let radiusY = this.ShapeBoundingBox.height
-                    let polygonPoints=[]
-                    for(let i = 0; i < this.polygonSides; i++){
-                            var pp=new polygonPoint(this.Location.x+radiusX*Math.sin(angle),this.Location.y-radiusY*Math.cos(angle))
-                            polygonPoints.push(pp)
+                    let angle = 0
+                    for(let i = 1; i < this.polygonSides; i++){
+                            var pp=new polygonPoint(this.ShapeBoundingBox.top+radiusX*Math.sin(angle),this.ShapeBoundingBox.left-radiusY*Math.cos(angle))
+                            object.polpoints[i]=pp
                             angle=angle+2*Math.PI/this.polygonSides
                     }
                     this.ctx.beginPath()
@@ -329,6 +329,7 @@ export default {
             
         },
         prevDraw(object){
+            if(object!=null){
             this.ctx.strokeStyle="black"
                 for(let i=0;i<this.shapes.length;i++){
                     if(this.shapes[i].id!=object.id){
@@ -365,6 +366,7 @@ export default {
                         }
                     }
                 }
+        }
         },
         clearSelected(object){
                 this.ctx.strokeStyle="white"
@@ -419,6 +421,7 @@ export default {
             else if(this.currentTool==='moving'){
                     this.dragButton = true
                     this.Selection(e)
+                    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
@@ -426,12 +429,14 @@ export default {
             }else if(this.currentTool==='resize'){
                     this.resizeButton = true
                     this.Selection(e)
+                    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
                     this.saveCanvasImage()
             }else if(this.currentTool==='delete'){
                     this.Selection(e)
+                    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
@@ -488,7 +493,7 @@ export default {
             this.resizeButton=false
             this.usingBrush=false
             this.currShape=null
-            
+            console.log(this.shapes)
         },
 
         AddRecentShape(){
@@ -670,13 +675,18 @@ export default {
                   }
                  else if(this.currShape instanceof ellipse) { // ellipse Detection
 
-                    
-                      if(Math.pow((this.MouseDownPos.x-this.currShape.x)/this.currShape.r1,2)+Math.pow((this.MouseDownPos.y-this.currShape.y)/this.currShape.r2,2)<=1){
+                    if(this.currShape.r1>this.currShape.r2){
+                      if( (Math.pow(((this.MouseDownPos.x-this.currShape.x)/(this.currShape.r1)/2),2)+Math.pow(((this.MouseDownPos.y-this.currShape.y)/(this.currShape.r1/2)),2)) <= 1){
                           console.log("iam a ellipse of id" + this.currShape.id)
                           break
+                      }
                       }else{
-                      this.currShape=null
-                  }
+                         
+                        if(Math.pow(((this.MouseDownPos.x-this.currShape.x)/this.currShape.r2),2)+Math.pow(((this.MouseDownPos.y-this.currShape.y)/this.currShape.r2),2)<=1){
+                          console.log("iam a ellipse of id" + this.currShape.id)
+                          break
+                      }
+                      }
                     }
                  else if(this.currShape instanceof polygon) { // polygon Detection
                     
@@ -686,12 +696,12 @@ export default {
 
                             console.log("iamPol"+this.currShape.id)
                             break
-                    }else{
-                      this.currShape=null
-                  }  
+                    }  
    
 
-                    }
+                    }else{
+                      this.currShape=null
+                  }
                     
              
                   
