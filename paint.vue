@@ -1,20 +1,33 @@
+ 
 <template>
-<div>yala bena</div>
-<div>
-<button @click="ChangeTool('brush')">brush</button>
-<button @click="ChangeTool('triangle')">triangle</button>
-<button @click="ChangeTool('square')" type="button">square</button>
-<button @click="ChangeTool('circle')" type="button">circle</button>
-<button @click="ChangeTool('ellipse')" type="button">Ellipse</button>
- <button @click="ChangeTool('polygon')" type="button">polygon</button>
- <button @click="ChangeTool('rectangle')" type="button">rectangle</button>
- <button @click="ChangeTool('line')" type="button">line</button>
- <button @click="ChangeTool('moving')" type="button">Drag</button>
- <button @click="ChangeTool('resize')" type="button">Resize</button>
- <button @click="ChangeTool('delete')" type="button">Delete</button>
+<div id="toolbar">
+<label id="title">PaintApp</label>
+<div id="btn-grp">
+
+<button class="btn" @click="ChangeTool('triangle')">triangle</button>
+<button class="btn" @click="ChangeTool('square')" type="button">square</button>
+<button class="btn" @click="ChangeTool('circle')" type="button">circle</button>
+<button class="btn" @click="ChangeTool('ellipse')" type="button">Ellipse</button>
+ <button class="btn" @click="ChangeTool('polygon')" type="button">polygon</button>
+ <button class="btn" @click="ChangeTool('rectangle')" type="button">rectangle</button>
+ <button class="btn" @click="ChangeTool('line')" type="button">line</button>
+ <button class="btn" @click="ChangeTool('moving')" type="button">Drag</button>
+ <button class="btn" @click="ChangeTool('resize')" type="button">Resize</button>
+ <button class="btn" @click="ChangeTool('delete')" type="button">Delete</button>
+ <input id="color" type="color" class="btn" value="#33EAFF">
+ <input id ="line_width" type="number" name="lineWidth" list="linewidth" placeholder="Line width"/>
+ <datalist id="linewidth" >
+ <option value="12"></option>
+ <option value="14"></option>
+ <option value="18"></option>
+ <option value="24"></option>
+ <option value="40"></option>
+ </datalist>
 </div>
- <canvas id ="my-canvas" width="800" height="800"></canvas>   
+</div>
+ <canvas id ="my-canvas" width="1400" height="800"></canvas>   
 </template>
+
 
 <script>
 import {polygonPoint,square,circle,rectangle, line,ellipse,polygon} from './classes.js'
@@ -23,6 +36,8 @@ export default {
     
     data() {
         return {
+            changeWidth:false,
+            changeColor:false,
             first:false,
             currShape:null,
             dragButton:false,
@@ -79,10 +94,24 @@ export default {
         $vm.canvas=c
         $vm.ctx=$vm.canvas.getContext('2d')
         $vm.ctx.strokeStyle=$vm.strokeColor
-        $vm.ctx.line_Width=$vm.line_Width
-            $vm.canvas.addEventListener("mousedown",$vm.ReactToMouseDown)
-            $vm.canvas.addEventListener("mousemove",$vm.ReactToMouseMove)
-            $vm.canvas.addEventListener("mouseup",$vm.ReactToMouseUp)
+        $vm.ctx.lineWidth=$vm.line_Width
+        $vm.canvas.addEventListener("mousedown",$vm.ReactToMouseDown)
+        $vm.canvas.addEventListener("mousemove",$vm.ReactToMouseMove)
+        $vm.canvas.addEventListener("mouseup",$vm.ReactToMouseUp)
+        let colorInput=document.querySelector('#color') 
+        colorInput.addEventListener('input',()=>{
+          $vm.strokeColor=colorInput.value
+          $vm.ctx.strokeColor=$vm.strokeColor
+          $vm.changeColor=true
+          console.log($vm.strokeColor)
+        })
+        let lineWinput=document.querySelector('#line_width')
+        lineWinput.addEventListener('input',()=>{
+            $vm.line_Width=lineWinput.value
+            $vm.ctx.lineWidth=$vm.line_Width
+            $vm.changeWidth=true
+            console.log($vm.ctx.lineWidth)
+        })
     },
     methods:{
         ChangeTool(toolClicked){
@@ -132,7 +161,7 @@ export default {
         degreesToRadians(degrees){
             return degrees *(Math.PI/180)
         },
-        gettrianglepoints(){
+         gettrianglepoints(){
             let trianglePoint=[]
             var p1=new polygonPoint(this.MouseDownPos.x,this.MouseDownPos.y)
             var p2=new polygonPoint(this.Location.x,this.Location.y)
@@ -152,7 +181,6 @@ export default {
             this.ctx.lineTo(trianglepoint[2].x,trianglepoint[2].y)
             this.ctx.closePath()
         },
-
         getPolygonPoints(){
             let angle = this.degreesToRadians(this.getAngleByXandY(this.Location.x,this.Location.y))
             let radiusX = this.ShapeBoundingBox.width
@@ -178,7 +206,7 @@ export default {
         drawRubberbandShape(loc){
             this.ctx.strokeStyle=this.strokeColor
             this.ctx.fillStyle=this.fillColor
-            this.ctx.lineWidth=2
+            this.ctx.lineWidth=this.line_Width
             if(this.currentTool==='brush'){
                 this.drawBrush()
             }
@@ -217,9 +245,6 @@ export default {
             }else if(this.currentTool==="triangle"){
                     this.getTriangle()
                     this.ctx.stroke()
-                   
-                    
-
             }
         },
         updateRubberbandOnMove(loc){
@@ -237,7 +262,7 @@ export default {
                 if(this.brushDownPos[i]){
                     this.ctx.moveTo(this.brushXPoints[i-1],this.brushYPoints[i-1])
                 }else{
-                    this.ctx.moveTo(this.brushXPoints[i],this.brushYPoints[i])
+                    this.ctx.moveTo(this.brushXPoints[i]-1,this.brushYPoints[i])
                 }
                 this.ctx.lineTo(this.brushXPoints[i],this.brushYPoints[i])
                 this.ctx.closePath()
@@ -245,7 +270,7 @@ export default {
             }
         },
         drawDrag(object){
-            
+            this.ctx.lineWidth=2
             this.ctx.strokeStyle="black"
                 if(object instanceof circle){
                     object.x=this.Location.x
@@ -303,6 +328,7 @@ export default {
             
         },
         drawResize(object){
+            this.ctx.lineWidth=2
             this.ctx.fillStyle=this.fillColor
             this.ctx.strokeStyle="black"
                 if(object instanceof circle){
@@ -330,13 +356,12 @@ export default {
                     this.ctx.stroke()
                 }else if(object instanceof polygon){
                     this.updateRubberBandSizeData(this.Location)
-                    let angle = this.degreesToRadians(this.getAngleByXandY(this.Location.x,this.Location.y))
                     let radiusX = this.ShapeBoundingBox.width
                     let radiusY = this.ShapeBoundingBox.height
-                    let polygonPoints=[]
-                    for(let i = 0; i < this.polygonSides; i++){
-                            var pp=new polygonPoint(this.Location.x+radiusX*Math.sin(angle),this.Location.y-radiusY*Math.cos(angle))
-                            polygonPoints.push(pp)
+                    let angle = 0
+                    for(let i = 1; i < this.polygonSides; i++){
+                            var pp=new polygonPoint(this.ShapeBoundingBox.top+radiusX*Math.sin(angle),this.ShapeBoundingBox.left-radiusY*Math.cos(angle))
+                            object.polpoints[i]=pp
                             angle=angle+2*Math.PI/this.polygonSides
                     }
                     this.ctx.beginPath()
@@ -359,6 +384,7 @@ export default {
             
         },
         prevDraw(object){
+            if(object!=null){
             this.ctx.strokeStyle="black"
                 for(let i=0;i<this.shapes.length;i++){
                     if(this.shapes[i].id!=object.id){
@@ -395,6 +421,7 @@ export default {
                         }
                     }
                 }
+        }
         },
         clearSelected(object){
                 this.ctx.strokeStyle="white"
@@ -449,6 +476,7 @@ export default {
             else if(this.currentTool==='moving'){
                     this.dragButton = true
                     this.Selection(e)
+                    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
@@ -456,12 +484,14 @@ export default {
             }else if(this.currentTool==='resize'){
                     this.resizeButton = true
                     this.Selection(e)
+                    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
                     this.saveCanvasImage()
             }else if(this.currentTool==='delete'){
                     this.Selection(e)
+                    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
@@ -497,6 +527,7 @@ export default {
             }
         },
         ReactToMouseUp(e){
+            if(!this.changeColor&&!this.changeWidth){
             if(this.currentTool != '' &&this.currentTool != 'moving' && this.currentTool != 'resize') this.AddRecentShape()
             this.canvas.style.cursor="default"
             this.Location=this.getMousePosition(e.clientX,e.clientY)
@@ -516,7 +547,11 @@ export default {
             this.resizeButton=false
             this.usingBrush=false
             this.currShape=null
-            
+            console.log(this.shapes)}
+            else{
+                this.changeColor=false
+                this.changeWidth=false
+            }
         },
         AddRecentShape(){
             if(this.currentTool==="circle" && this.ShapeBoundingBox.width != 0){
@@ -683,13 +718,18 @@ export default {
                         
                   }
                  else if(this.currShape instanceof ellipse) { // ellipse Detection
-                    
-                      if(Math.pow((this.MouseDownPos.x-this.currShape.x)/this.currShape.r1,2)+Math.pow((this.MouseDownPos.y-this.currShape.y)/this.currShape.r2,2)<=1){
+                    if(this.currShape.r1>this.currShape.r2){
+                      if( (Math.pow(((this.MouseDownPos.x-this.currShape.x)/(this.currShape.r1)/2),2)+Math.pow(((this.MouseDownPos.y-this.currShape.y)/(this.currShape.r1/2)),2)) <= 1){
                           console.log("iam a ellipse of id" + this.currShape.id)
                           break
+                      }
                       }else{
-                      this.currShape=null
-                  }
+                         
+                        if(Math.pow(((this.MouseDownPos.x-this.currShape.x)/this.currShape.r2),2)+Math.pow(((this.MouseDownPos.y-this.currShape.y)/this.currShape.r2),2)<=1){
+                          console.log("iam a ellipse of id" + this.currShape.id)
+                          break
+                      }
+                      }
                     }
                  else if(this.currShape instanceof polygon) { // polygon Detection
                     
@@ -698,11 +738,11 @@ export default {
                     if(this.isInside(this.currShape.polpoints,6,currClick)){
                             console.log("iamPol"+this.currShape.id)
                             break
+                    }  
+   
                     }else{
                       this.currShape=null
-                  }  
-   
-                    }
+                  }
                     
              
                   
@@ -712,9 +752,73 @@ export default {
 }
 </script>
 <style >
+#title{
+ margin: 1em 0 0.5em 0;
+	color: #343434;
+	font-weight: normal;
+	font-family: 'Ultra', sans-serif;   
+	font-size: 36px;
+	line-height: 42px;
+	text-transform: uppercase;
+	text-shadow: 0 2px white, 0 3px #777;
+}
+#btn-grp{
+  display:flex;
+  justify-content: space-around;
+
+  
+}
+.btn{
+ position: relative;
+  background-color: #020202;
+  border: none;
+  font-size: 18px;
+  color: #63e2d8;
+  padding: 20px;
+  width: 200px;
+  text-align: center;
+  -webkit-transition-duration: 0.4s; /* Safari */
+  transition-duration: 0.4s;
+  overflow: hidden;
+  cursor: pointer;
+
+}
+.btn:after {
+  content: "";
+  background: #21f1d6;
+  display: block;
+  position: absolute;
+  padding-top: 300%;
+  padding-left: 350%;
+  margin-left: -20px!important;
+  margin-top: -120%;
+  opacity: 0;
+  transition: all 0.8s
+}
+
+.btn:active:after {
+  padding: 0;
+  margin: 0;
+  opacity: 1;
+  transition: 0s
+}
+#toolbar{
+  height: 100px;
+  background-color: rgb(73, 210, 219);
+  margin-bottom: 20px;
+}
 #my-canvas{
+
     background-color: white;
-    margin: auto;
+    margin-top: 10px;
+    margin-right: auto;
+    margin-left: auto;
     border :3px solid #000000;
+    display: block;
+}
+#line_width{
+    border :2px solid  rgb(73, 210, 219);
+    padding: 12px;
+    width: 100px;
 }
 </style>
