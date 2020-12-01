@@ -1,8 +1,5 @@
 <template>
 <div>yala bena</div>
-<div>
-<button @click="ChangeTool('brush')">brush</button>
-<button @click="ChangeTool('triangle')">triangle</button>
 <button @click="ChangeTool('square')" type="button">square</button>
 <button @click="ChangeTool('circle')" type="button">circle</button>
 <button @click="ChangeTool('ellipse')" type="button">Ellipse</button>
@@ -12,12 +9,15 @@
  <button @click="ChangeTool('moving')" type="button">Drag</button>
  <button @click="ChangeTool('resize')" type="button">Resize</button>
  <button @click="ChangeTool('delete')" type="button">Delete</button>
-</div>
- <canvas id ="my-canvas" width="800" height="800"></canvas>   
+  <button @click="undo">undo</button>
+ <button @click="redo">redo</button>
+ <br>
+ <canvas id ="my-canvas" width="600" height="600"></canvas>   
 </template>
 
 <script>
 import {polygonPoint,square,circle,rectangle, line,ellipse,polygon} from './classes.js'
+import axios from 'axios'
 export default {
     name:'paintp',
     
@@ -85,6 +85,148 @@ export default {
             $vm.canvas.addEventListener("mouseup",$vm.ReactToMouseUp)
     },
     methods:{
+        undo(){
+            axios.get('http://localhost:8085/undo')
+                    .then(response => {
+                        var x = String(response.data)    
+                        var y = x.split(",")
+
+                        if(y.length==1){
+                            console.log(y)
+                            
+                            for(let i=0;i<this.shapes.length;i++){
+                            
+                            if(this.shapes[i].id===Number(y[0])){
+                                this.currShape=this.shapes[i]
+                                this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
+                                this.clearSelected(this.currShape)
+                                this.saveCanvasImage()
+                                this.prevDraw(this.currShape)
+                                this.saveCanvasImage()
+                                for(let j=0;j<this.shapes.length;j++){
+                                if(this.shapes[j].id===this.currShape.id){
+                                this.shapes.splice(j,1)
+                                }
+                                }
+                            }
+                            }
+                        }
+                        else{
+                            console.log(y)
+
+                            if(String(y[0])=='delete'){
+                                if(String(y[1])=='Model.Circle'){ //Circle Detection                                    
+                                    for(let i=0;i<this.shapes.length;i++){
+                                    if(this.shapes[i].id===Number(y[2])){
+                                         this.shapes.splice(i+1, 0,new circle(Number(y[4]),Number(y[5]),Number(y[6]),Number(y[3])) )
+                                         this.currShape = this.shapes[i+1]
+                                         this.ctx.beginPath()
+                                         this.ctx.arc(this.currShape.x,this.currShape.y,this.currShape.r,0,Math.PI*2)
+                                         this.ctx.stroke()
+                                    }
+                                    }
+                                    
+                                }
+                                else if(String(y[1])=='Model.Square') { // Square Detection
+                                    for(let i=0;i<this.shapes.length;i++){
+                                    if(this.shapes[i].id===Number(y[2])){
+                                         this.shapes.splice(i+1, 0,new square(Number(y[4]),Number(y[5]),Number(y[6]),Number(y[3])) )
+                                         this.currShape = this.shapes[i+1]
+                                         this.ctx.strokeRect(this.currShape.x,this.currShape.y,this.currShape.length,this.currShape.length)
+                                    
+                                    }
+                                    }
+                                }
+                                else if(String(y[1])=='Model.Rectangle') { // Square Detection
+                                    for(let i=0;i<this.shapes.length;i++){
+                                    if(this.shapes[i].id===Number(y[2])){
+                                         this.shapes.splice(i+1, 0,new rectangle(Number(y[4]),Number(y[5]),Number(y[6]),Number(y[7]),Number(y[3])) )
+                                         this.currShape = this.shapes[i+1]
+                                       this.ctx.strokeRect(this.currShape.x,this.currShape.y,this.currShape.width,this.currShape.height)
+                                       console.log(this.currShape)
+                                    
+                                    }
+                                    }
+                                    
+                                }
+                            // else if(this.currShape instanceof line) { // line Detection    
+                                //}
+                                else if(String(y[1])=='Model.Ellipse') { // ellipse Detection
+                                    for(let i=0;i<this.shapes.length;i++){
+                                    if(this.shapes[i].id===Number(y[2])){
+                                        this.shapes.splice(i+1, 0,new ellipse(Number(y[4]),Number(y[5]),Number(y[6]),Number(y[7]),Number(y[3])) )
+                                        this.currShape = this.shapes[i+1]
+                                       this.ctx.beginPath()
+                                    this.ctx.ellipse(this.currShape.x,this.currShape.y,this.currShape.r1,this.currShape.r2,Math.PI/4,0,Math.PI*2) 
+                                    this.ctx.stroke()
+                                    
+                                    }
+                                    }
+                                    
+                                }
+                                //else if(this.currShape instanceof polygon) { // polygon Detection 
+                                //} 
+
+                            }
+                           else{
+                             for(let i=0;i<this.shapes.length;i++){
+                                if(this.shapes[i].id===Number(y[1])){  
+                                this.currShape=this.shapes[i]
+                                this.clearSelected(this.currShape)
+                                this.saveCanvasImage()
+                                this.prevDraw(this.currShape)
+                                this.saveCanvasImage()
+                                if(this.currShape instanceof circle){ //Circle Detection
+                                    this.currShape.x=Number(y[2])
+                                    this.currShape.y=Number(y[3])
+                                    this.currShape.r=Number(y[4])
+                                    this.ctx.beginPath()
+                                    this.ctx.arc(this.currShape.x,this.currShape.y,this.currShape.r,0,Math.PI*2)
+                                    this.ctx.stroke()
+                                }
+                                else if(this.currShape instanceof square) { // Square Detection
+                                    this.currShape.x=Number(y[2])
+                                    this.currShape.y=Number(y[3])
+                                    this.currShape.length=Number(y[4])
+                                    this.ctx.strokeRect(this.currShape.x,this.currShape.y,this.currShape.length,this.currShape.length)
+                                }
+                                else if(this.currShape instanceof rectangle) { // Square Detection
+                                    this.currShape.x=Number(y[2])
+                                    this.currShape.y=Number(y[3])
+                                    this.currShape.width=Number(y[4])   
+                                    this.currShape.height=Number(y[5])
+                                    this.ctx.strokeRect(this.currShape.x,this.currShape.y,this.currShape.width,this.currShape.height)
+                                }
+                            // else if(this.currShape instanceof line) { // line Detection    
+                                //}
+                                else if(this.currShape instanceof ellipse) { // ellipse Detection
+                                    this.currShape.x=Number(y[2])
+                                    this.currShape.y=Number(y[3])
+                                    this.currShape.r1=Number(y[4])   
+                                    this.currShape.r2=Number(y[5])
+                                    this.ctx.beginPath()
+                                    this.ctx.ellipse(this.currShape.x,this.currShape.y,this.currShape.r1,this.currShape.r2,Math.PI/4,0,Math.PI*2) 
+                                    this.ctx.stroke()
+
+                                }
+                                //else if(this.currShape instanceof polygon) { // polygon Detection 
+                                //}  
+                                }
+                             }
+                             }
+                             
+                            }
+                            
+                        })
+          
+        },
+        redo(){
+            axios.get('http://localhost:8085/redo')
+                    .then(response => {
+                            console.log(response.data);
+                     })
+          
+        },
         ChangeTool(toolClicked){
             this.currentTool=toolClicked
         },
@@ -132,27 +274,6 @@ export default {
         degreesToRadians(degrees){
             return degrees *(Math.PI/180)
         },
-        gettrianglepoints(){
-            let trianglePoint=[]
-            var p1=new polygonPoint(this.MouseDownPos.x,this.MouseDownPos.y)
-            var p2=new polygonPoint(this.Location.x,this.Location.y)
-            var distancex=this.MouseDownPos.x-this.Location.x
-            var distancey=this.MouseDownPos.y-this.Location.y
-            var p3=new polygonPoint(this.Location.x-distancex,this.Location.y+distancey)
-            trianglePoint.push(p1)
-            trianglePoint.push(p2)
-            trianglePoint.push(p3)
-            return trianglePoint
-        },
-        getTriangle(){
-            let trianglepoint=this.gettrianglepoints()
-            this.ctx.beginPath()
-            this.ctx.moveTo(trianglepoint[0].x,trianglepoint[0].y)
-            this.ctx.lineTo(trianglepoint[1].x,trianglepoint[1].y)
-            this.ctx.lineTo(trianglepoint[2].x,trianglepoint[2].y)
-            this.ctx.closePath()
-        },
-
         getPolygonPoints(){
             let angle = this.degreesToRadians(this.getAngleByXandY(this.Location.x,this.Location.y))
             let radiusX = this.ShapeBoundingBox.width
@@ -214,12 +335,6 @@ export default {
                 this.getPolygon()
                 this.ctx.stroke()
                 
-            }else if(this.currentTool==="triangle"){
-                    this.getTriangle()
-                    this.ctx.stroke()
-                   
-                    
-
             }
         },
         updateRubberbandOnMove(loc){
@@ -237,7 +352,7 @@ export default {
                 if(this.brushDownPos[i]){
                     this.ctx.moveTo(this.brushXPoints[i-1],this.brushYPoints[i-1])
                 }else{
-                    this.ctx.moveTo(this.brushXPoints[i],this.brushYPoints[i])
+                    this.ctx.moveTo(this.brushXPoints[i]-1,this.brushYPoints[i])
                 }
                 this.ctx.lineTo(this.brushXPoints[i],this.brushYPoints[i])
                 this.ctx.closePath()
@@ -359,6 +474,7 @@ export default {
             
         },
         prevDraw(object){
+            if(object!=null){
             this.ctx.strokeStyle="black"
                 for(let i=0;i<this.shapes.length;i++){
                     if(this.shapes[i].id!=object.id){
@@ -395,6 +511,7 @@ export default {
                         }
                     }
                 }
+            }
         },
         clearSelected(object){
                 this.ctx.strokeStyle="white"
@@ -449,23 +566,36 @@ export default {
             else if(this.currentTool==='moving'){
                     this.dragButton = true
                     this.Selection(e)
+                    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
                     this.saveCanvasImage()
+                   
             }else if(this.currentTool==='resize'){
                     this.resizeButton = true
                     this.Selection(e)
+                    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
                     this.saveCanvasImage()
+                    
             }else if(this.currentTool==='delete'){
                     this.Selection(e)
+                    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
                     this.saveCanvasImage()
+                    axios.get('http://localhost:8085/delete', {
+                     params: {
+                         id : this.currShape.id,
+                    }
+                    })
+                    .then(response => {
+                            console.log(response.data);
+                     })
                     for(let i=0;i<this.shapes.length;i++){
                         if(this.shapes[i].id===this.currShape.id){
                             this.shapes.splice(i,1)
@@ -477,6 +607,7 @@ export default {
         ReactToMouseMove(e){
             this.canvas.style.cursor="crosshair"
             this.Location=this.getMousePosition(e.clientX,e.clientY)
+
             if(this.currentTool==='brush'&&this.dragging&&this.usingBrush){
                 if(this.Location.x>0&&this.Location.x<this.canvasWidth&& this.Location.y>0&&this.Location.y<this.canvasHeight){
                     this.AddBrushPoint(this.Location.x,this.Location.y,true)
@@ -498,13 +629,16 @@ export default {
         },
         ReactToMouseUp(e){
             if(this.currentTool != '' &&this.currentTool != 'moving' && this.currentTool != 'resize') this.AddRecentShape()
+
             this.canvas.style.cursor="default"
             this.Location=this.getMousePosition(e.clientX,e.clientY)
             this.RedrawCanvasImage()
             if(this.dragButton){
                     this.drawDrag(this.currShape)
+                    this.modifyData(this.currShape,'moving')
             }else if(this.resizeButton){
                        this.drawResize(this.currShape) 
+                        this.modifyData(this.currShape,'resizing')
             }
             else{
                     this.updateRubberbandOnMove(this.Location)
@@ -518,18 +652,132 @@ export default {
             this.currShape=null
             
         },
+        modifyData(currShape,param){
+            if(currShape instanceof circle){ //Circle Detection
+                axios.get('http://localhost:8085/modifyCircle', {
+                     params: {
+                         x : currShape.x,
+                         y : currShape.y,
+                         rad : currShape.r,
+                         id : currShape.id,
+                         type : param,  
+                    }
+                     })
+                    .then(response => {
+                            console.log(response.data);
+                     })
+                
+            }
+            else if(currShape instanceof square) { // Square Detection
+                axios.get('http://localhost:8085/modifySquare', {
+                     params: {
+                         x : currShape.x,
+                         y : currShape.y,
+                         length : currShape.length,
+                         id : currShape.id,
+                         type : param,  
+                    }
+                     })
+                    .then(response => {
+                            console.log(response.data);
+                     })
+                  }
+                else if(currShape instanceof rectangle) { // Square Detection
+                      axios.get('http://localhost:8085/modifyRectangle', {
+                     params: {
+                         x : currShape.x,
+                         y : currShape.y,
+                         width : currShape.width,
+                         height :currShape.height,
+                         id : currShape.id,
+                         type : param,  
+                    }
+                     })
+                    .then(response => {
+                            console.log(response.data);
+                     })
+                  }
+                  /*
+                else if(this.currShape instanceof line) { // line Detection
+                        var slope = (this.currShape.p2y-this.currShape.p1y)/(this.currShape.p2x-this.currShape.p1x)
+
+                        
+                        if(Math.abs(this.MouseDownPos.y-this.currShape.p1y - slope*(this.MouseDownPos.x-this.currShape.p1x ))<= 5.0 ){
+                            console.log("iam a Line of id" + this.currShape.id)
+                            break
+                        }else{
+                      this.currShape=null
+                  }
+                        
+                  }*/
+                 else if(currShape instanceof ellipse) { // ellipse Detection
+                        axios.get('http://localhost:8085/modifyEllipse', {
+                     params: {
+                         x : currShape.x,
+                         y : currShape.y,
+                         r1 : currShape.r1,
+                         r2 : currShape.r2,
+                         id : currShape.id,
+                         type : param,  
+                    }
+                     })
+                    .then(response => {
+                            console.log(response.data);
+                     })
+                    
+                    }
+                    /*
+                 else if(currShape instanceof polygon) { // polygon Detection
+                    
+                    
+                    }*/
+   
+
+                    },
         AddRecentShape(){
+
             if(this.currentTool==="circle" && this.ShapeBoundingBox.width != 0){
                   
                   this.shapes.push(new circle(this.MouseDownPos.x,this.MouseDownPos.y,this.ShapeBoundingBox.width,this.counter++))
+                  axios.get('http://localhost:8085/c2', {
+                     params: {
+                         x : this.MouseDownPos.x,
+                         y : this.MouseDownPos.y,
+                         rad : this.ShapeBoundingBox.width,
+                         id : this.counter-1
+                         
+                    }
+                     })
+                    .then(response => {
+                            console.log(response.data);
+                     })
             }
             else if(this.currentTool==="square" && this.ShapeBoundingBox.width != 0){
                   
                   this.shapes.push(new square(this.MouseDownPos.x,this.MouseDownPos.y,this.ShapeBoundingBox.width,this.counter++))
+                  axios.get('http://localhost:8085/c', {
+                     params: {
+                         x : this.MouseDownPos.x, 
+                         y : this.MouseDownPos.y,
+                          length : this.ShapeBoundingBox.width,
+                           id : this.counter-1
+                    }
+                     })
+                    .then(response => {
+                            console.log(response.data);
+                     })
             }
             else if(this.currentTool==="rectangle" && this.ShapeBoundingBox.width != 0 &&this.ShapeBoundingBox.height != 0){
                   
                   this.shapes.push(new rectangle(this.MouseDownPos.x,this.MouseDownPos.y,this.ShapeBoundingBox.width,this.ShapeBoundingBox.height,this.counter++))
+                  axios.get('http://localhost:8085/c1', {
+                     params: {
+                         x : this.MouseDownPos.x,y : this.MouseDownPos.y,width : this.ShapeBoundingBox.width, height: this.ShapeBoundingBox.height,id : this.counter-1
+                    }
+                     })
+                    .then(response => {
+                            console.log(response.data);
+                     })
             }
             
             else if(this.currentTool==="line" && this.ShapeBoundingBox.width != 0 &&this.ShapeBoundingBox.height != 0){
@@ -539,6 +787,15 @@ export default {
             else if(this.currentTool==="ellipse" && this.ShapeBoundingBox.width != 0 &&this.ShapeBoundingBox.height != 0){
                   
                   this.shapes.push(new ellipse(this.MouseDownPos.x,this.MouseDownPos.y,this.ShapeBoundingBox.width/2,this.ShapeBoundingBox.height/2,this.counter++))
+                  axios.get('http://localhost:8085/c4', {
+                     params: {
+                         x : this.MouseDownPos.x,y : this.MouseDownPos.y,r1 : this.ShapeBoundingBox.width/2, r2: this.ShapeBoundingBox.height/2,
+                         id : this.counter-1   
+                    }
+                     })
+                    .then(response => {
+                            console.log(response.data);
+                     })
             }         
             else if(this.currentTool==="polygon" && this.ShapeBoundingBox.width != 0 &&this.ShapeBoundingBox.height != 0){
                   
@@ -549,7 +806,6 @@ export default {
            
             
         },
-    
     onSegment(p, q, r)  
              { 
         if (q.x <= Math.max(p.x, r.x) && 
@@ -561,6 +817,7 @@ export default {
              } 
             return false; 
              } ,
+
         orientation(p,q,r)  
                     { 
              
@@ -573,7 +830,9 @@ export default {
             } 
             return (val > 0) ? 1 : 2;  
             } ,
+
          doIntersect(p1,q1,p2,q2)  {
+
         let o1 = this.orientation(p1, q1, p2) 
         let o2 = this.orientation(p1, q1, q2) 
         let o3 = this.orientation(p2, q2, p1) 
@@ -589,6 +848,7 @@ export default {
         { 
             return true; 
         } 
+
         if (o2 == 0 && this.onSegment(p1, q2, q1))  
         {
             return true; 
@@ -604,6 +864,8 @@ export default {
         } 
         return false;  
           } ,
+
+
      isInside(polygon,n,p)   { 
         
         if (n < 3)  
@@ -617,8 +879,10 @@ export default {
         { 
             let next = (i + 1) % n; 
   
+
             if (this.doIntersect(polygon[i], polygon[next], p, extreme))  
             { 
+
                 if (this.orientation(polygon[i], p, polygon[next]) == 0) 
                 { 
                     return this.onSegment(polygon[i], p, 
@@ -640,11 +904,13 @@ export default {
            
             let i = this.shapes.length-1
              for( i; i >=0 ; i--){  
+
                  this.currShape=this.shapes[i]
                  
                  if(this.currShape instanceof circle){ //Circle Detection
                 
                  let distance = (Math.sqrt(Math.pow((this.MouseDownPos.x-this.currShape.x),2)+Math.pow((this.MouseDownPos.y-this.currShape.y),2)))
+
                  if(distance<=this.currShape.r){
                       console.log("iam aCircle of id" + this.currShape.id)
                       break
@@ -673,6 +939,7 @@ export default {
                   }
                 else if(this.currShape instanceof line) { // line Detection
                         var slope = (this.currShape.p2y-this.currShape.p1y)/(this.currShape.p2x-this.currShape.p1x)
+
                         
                         if(Math.abs(this.MouseDownPos.y-this.currShape.p1y - slope*(this.MouseDownPos.x-this.currShape.p1x ))<= 5.0 ){
                             console.log("iam a Line of id" + this.currShape.id)
@@ -683,31 +950,45 @@ export default {
                         
                   }
                  else if(this.currShape instanceof ellipse) { // ellipse Detection
+
                     
-                      if(Math.pow((this.MouseDownPos.x-this.currShape.x)/this.currShape.r1,2)+Math.pow((this.MouseDownPos.y-this.currShape.y)/this.currShape.r2,2)<=1){
+                      if(this.currShape.r1>this.currShape.r2){
+                      if( (Math.pow(((this.MouseDownPos.x-this.currShape.x)/(this.currShape.r1)/2),2)+Math.pow(((this.MouseDownPos.y-this.currShape.y)/(this.currShape.r1/2)),2)) <= 1){
                           console.log("iam a ellipse of id" + this.currShape.id)
                           break
+                      }
                       }else{
-                      this.currShape=null
-                  }
+                         
+                        if(Math.pow(((this.MouseDownPos.x-this.currShape.x)/this.currShape.r2),2)+Math.pow(((this.MouseDownPos.y-this.currShape.y)/this.currShape.r2),2)<=1){
+                          console.log("iam a ellipse of id" + this.currShape.id)
+                          break
+                      }
+                      }
                     }
                  else if(this.currShape instanceof polygon) { // polygon Detection
                     
                     let currClick=new polygonPoint(this.MouseDownPos.x,this.MouseDownPos.y)
                     
                     if(this.isInside(this.currShape.polpoints,6,currClick)){
+
                             console.log("iamPol"+this.currShape.id)
                             break
                     }else{
                       this.currShape=null
                   }  
    
-                    }
+
+                    }else{
+                      this.currShape=null
+                  }
                     
              
                   
             }
+
         }
+
+
     }
 }
 </script>
