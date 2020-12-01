@@ -57,3 +57,10 @@ export class square{
         this.id=id
     }
 }
+export class triangle{
+    constructor(polpoints=[],id){
+        this.polpoints=polpoints
+        this.id=id
+    }
+
+}
