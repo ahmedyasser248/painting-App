@@ -6,6 +6,8 @@ export class polygonPoint{
     }
 }
 export class rectangle{
+    StrokeColor='#000000'
+    fillColor='#FFFFFF'
     constructor(x,y,width,height,id){
         this.x=x
         this.y=y
@@ -22,6 +24,7 @@ export class polygon{
 
 }
 export class line{
+    StrokeColor='#000000'
     constructor(p1x,p1y,p2x,p2y,id){
         this.p1x=p1x
         this.p2x=p2x
@@ -31,6 +34,8 @@ export class line{
     }
 }
 export class ellipse{
+    StrokeColor='#000000'
+    fillColor='#FFFFFF'
     constructor(x,y,r1,r2,id){
         this.x=x
         this.y=y
@@ -41,6 +46,8 @@ export class ellipse{
 }
 
 export class circle{
+    StrokeColor='#000000'
+    fillColor='#FFFFFF'
     constructor(x,y,r,id){
         this.x=x
         this.y=y
@@ -50,6 +57,8 @@ export class circle{
 }
 
 export class square{
+    StrokeColor='#000000'
+    fillColor='#FFFFFF'
     constructor(x,y,length,id){
         this.x=x
         this.y=y
@@ -59,6 +68,8 @@ export class square{
 }
 
 export class triangle{
+     StrokeColor='#000000'
+    fillColor='#FFFFFF'
     constructor(polpoints=[],id){
         this.polpoints=polpoints
         this.id=id
