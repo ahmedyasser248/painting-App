@@ -13,6 +13,13 @@
  <button class="btn" @click="ChangeTool('delete')" type="button">Delete</button>
   <button class="btn" @click="undo">Undo</button>
  <button class="btn" @click="redo">Redo</button>
+
+<button class="btn" @click="Save" >Save</button>
+<input type="file" id="input" hidden="hidden" webkitdirectory v-once >
+  <label for="Xml">Xml</label>
+  <input type="radio" id="Jason" name="Save" value="Jason" checked="checked"> 
+  <label for="Jason">Jason</label>
+ <button class="btn" @click="Load" >Load</button>
  <br>
  <input id="color" type="color" class="btn" value="#33EAFF">
  <input id ="line_width" type="number" name="lineWidth" list="linewidth" placeholder="Line width"/>
@@ -114,6 +121,61 @@ export default {
         })
     },
     methods:{
+
+        ClearAll(){
+            this.changeWidth=false
+            this.changeColor=false
+            this.first=false
+            this.currShape=null
+            this.dragButton=false
+            this.resizeButton=false
+            this.counter=0
+            this.shapes=[]
+            this.polPoints=[]
+            this.recentShape=''
+            this.currentTool='ellipse'
+            this.canvas=''
+            this.ctx=''
+            this.savedImageData=''
+            this.strokeColor="black"
+            this.line_Width=2
+            this.fillColor='white'
+            this.canvasWidth=600
+            this.canvasHeight=600
+        },
+
+        Save(){
+            let val
+            var radios = document.getElementsByName('Save');
+                 for (var i=0, len=radios.length; i<len; i++) {
+                 if ( radios[i].checked ) { 
+                     val = radios[i].value; 
+                    break; 
+                 }
+            }
+            console.log(val)
+           // let sendData={
+            //    shapes:this.shapes
+           // }
+
+            //TODO SENDING THE ARRAY OF SHAPES TO THE BACKEND BY AXIOS
+            //axios.post('https://test.com/api/get_product', sendData)
+
+
+        },
+
+        Load(){
+
+
+            //SEND AXIOS TO BRING FILES NAMES
+
+            this.ClearAll()
+
+            //SEND AXIOS TO BRING FILE DATA
+
+            // EQUATING ARRAY WITH THIS.SHAPES ARRAY
+        },
+
         undo(){
             axios.get('http://localhost:8085/undo')
                     .then(response => {
