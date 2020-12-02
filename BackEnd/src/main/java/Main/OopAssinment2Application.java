@@ -1,4 +1,9 @@
 package Main;
+import java.io.*;
+
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,7 +13,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import Services.DrawingManager;
+import Services.Save;
 
 @SpringBootApplication
 @CrossOrigin
@@ -181,5 +192,35 @@ public class OopAssinment2Application {
 		return draw.redoMethod();
 
 	}
+	
+	@GetMapping("/Save")
+	public String save(@RequestParam String type){
+		
+	Save save=new Save(draw.getshapes());
+	ObjectMapper mapper=new ObjectMapper();
+	System.out.println(type);
+	if(type.equals("Jason")) {
+		System.out.println("Sudd");
+		try {
+			mapper.writeValue(new File("/home/save.jason"), save);
+			System.out.println("Sudd");
+		} catch (JsonGenerationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}else {
+		
+	}
+			
+		
+		
+		return type;
 
+}
 }

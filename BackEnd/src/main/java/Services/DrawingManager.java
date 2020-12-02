@@ -305,7 +305,10 @@ public class DrawingManager {
 
 	}
 
-
+	public ArrayList<IShape> getshapes(){
+		return this.shapes;
+	}
+	
 	public static DrawingManager getInstance() {
 		return obj;
 	}
