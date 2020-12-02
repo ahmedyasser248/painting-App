@@ -23,6 +23,8 @@ public class DrawingManager {
 	Deque<Integer> undoId = new LinkedList<>();
 
 	Deque<Integer> redoId = new LinkedList<>();
+	
+	int counter =0 ; 
 
 	public void createShape(String name, double[] array, int id) throws CloneNotSupportedException {
 		if (shapes.size() == 0) {
@@ -114,7 +116,7 @@ public class DrawingManager {
 	}
 
 	private void addUndoId(int id) {
-		if (undoId.size() <= 11) {
+		if (undoId.size() <= 5) {
 
 			undoId.add(id);
 		} else {
@@ -124,20 +126,22 @@ public class DrawingManager {
 	}
 
 	private void addUndo(ArrayList<IShape> temp) {
-		if (undo.size() <= 11) {
+		if (undo.size() <= 5) {
 			undo.add(temp);
 
 		} else {
-			undo.removeFirst();
+			System.out.println(undo.removeFirst().size());
 			undo.add(temp);
 		}
 	}
+
 
 	public String undoMethod() throws CloneNotSupportedException {
 
 		if (!undo.isEmpty()) {
 			redo.add(undo.peekLast());
 			undo.removeLast();
+			counter ++;
 		}
 		if (!undo.isEmpty()) {
 			// reset
@@ -229,6 +233,13 @@ public class DrawingManager {
 				undo.add(redo.peekLast());
 				redo.removeLast();
 			}
+			if(counter == 6){
+				undo.add(redo.peekLast());
+				redo.removeLast();
+				counter =0;
+
+			}
+			
 			// if drag and drop then undo
 			if (shapes.size() == redo.peekLast().size()) {
 
@@ -293,6 +304,7 @@ public class DrawingManager {
 		}
 
 	}
+
 
 	public static DrawingManager getInstance() {
 		return obj;
