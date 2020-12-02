@@ -1,25 +1,42 @@
+ 
 <template>
-<div>yala bena</div>
-<button @click="ChangeTool('square')" type="button">square</button>
-<button @click="ChangeTool('circle')" type="button">circle</button>
-<button @click="ChangeTool('ellipse')" type="button">Ellipse</button>
- <button @click="ChangeTool('polygon')" type="button">polygon</button>
- <button @click="ChangeTool('rectangle')" type="button">rectangle</button>
- <button @click="ChangeTool('line')" type="button">line</button>
- <button @click="ChangeTool('moving')" type="button">Drag</button>
- <button @click="ChangeTool('resize')" type="button">Resize</button>
- <button @click="ChangeTool('delete')" type="button">Delete</button>
- <canvas id ="my-canvas" width="600" height="600"></canvas>   
+<div id="toolbar">
+<label id="title">PaintApp</label>
+<div id="btn-grp">
+
+<button class="btn" @click="ChangeTool('triangle')">Triangle</button>
+<button class="btn" @click="ChangeTool('square')" type="button">Square</button>
+<button class="btn" @click="ChangeTool('circle')" type="button">Circle</button>
+<button class="btn" @click="ChangeTool('ellipse')" type="button">Ellipse</button>
+ <button class="btn" @click="ChangeTool('rectangle')" type="button">Rectangle</button>
+ <button class="btn" @click="ChangeTool('line')" type="button">line</button>
+ <button class="btn" @click="ChangeTool('moving')" type="button">Drag</button>
+ <button class="btn" @click="ChangeTool('resize')" type="button">Resize</button>
+ <button class="btn" @click="ChangeTool('delete')" type="button">Delete</button>
+ <input id="color" type="color" class="btn" value="#33EAFF">
+ <input id ="line_width" type="number" name="lineWidth" list="linewidth" placeholder="Line width"/>
+ <datalist id="linewidth" >
+ <option value="12"></option>
+ <option value="14"></option>
+ <option value="18"></option>
+ <option value="24"></option>
+ <option value="40"></option>
+ </datalist>
+</div>
+</div>
+ <canvas id ="my-canvas" width="1400" height="800"></canvas>   
 </template>
 
-<script>
-import {polygonPoint,square,circle,rectangle, line,ellipse,polygon} from './classes.js'
 
+<script>
+import {polygonPoint , square , circle , rectangle , line , ellipse , polygon , triangle} from './classes.js'
 export default {
     name:'paintp',
     
     data() {
         return {
+            changeWidth:false,
+            changeColor:false,
             first:false,
             currShape:null,
             dragButton:false,
@@ -76,10 +93,24 @@ export default {
         $vm.canvas=c
         $vm.ctx=$vm.canvas.getContext('2d')
         $vm.ctx.strokeStyle=$vm.strokeColor
-        $vm.ctx.line_Width=$vm.line_Width
-            $vm.canvas.addEventListener("mousedown",$vm.ReactToMouseDown)
-            $vm.canvas.addEventListener("mousemove",$vm.ReactToMouseMove)
-            $vm.canvas.addEventListener("mouseup",$vm.ReactToMouseUp)
+        $vm.ctx.lineWidth=$vm.line_Width
+        $vm.canvas.addEventListener("mousedown",$vm.ReactToMouseDown)
+        $vm.canvas.addEventListener("mousemove",$vm.ReactToMouseMove)
+        $vm.canvas.addEventListener("mouseup",$vm.ReactToMouseUp)
+        let colorInput=document.querySelector('#color') 
+        colorInput.addEventListener('input',()=>{
+          $vm.strokeColor=colorInput.value
+          $vm.ctx.strokeColor=$vm.strokeColor
+          $vm.changeColor=true
+          console.log($vm.strokeColor)
+        })
+        let lineWinput=document.querySelector('#line_width')
+        lineWinput.addEventListener('input',()=>{
+            $vm.line_Width=lineWinput.value
+            $vm.ctx.lineWidth=$vm.line_Width
+            $vm.changeWidth=true
+            console.log($vm.ctx.lineWidth)
+        })
     },
     methods:{
         ChangeTool(toolClicked){
@@ -129,6 +160,27 @@ export default {
         degreesToRadians(degrees){
             return degrees *(Math.PI/180)
         },
+         gettrianglepoints(){
+            let trianglePoint=[]
+            var p1=new polygonPoint(this.MouseDownPos.x,this.MouseDownPos.y)
+            var p2=new polygonPoint(this.Location.x,this.Location.y)
+            var distancex=this.MouseDownPos.x-this.Location.x
+            var distancey=this.MouseDownPos.y-this.Location.y
+            var p3=new polygonPoint(this.Location.x-distancex,this.Location.y+distancey)
+            trianglePoint.push(p1)
+            trianglePoint.push(p2)
+            trianglePoint.push(p3)
+            return trianglePoint
+        },
+        getTriangle(){
+            let trianglepoint=this.gettrianglepoints()
+            this.polPoints=trianglepoint
+            this.ctx.beginPath()
+            this.ctx.moveTo(trianglepoint[0].x,trianglepoint[0].y)
+            this.ctx.lineTo(trianglepoint[1].x,trianglepoint[1].y)
+            this.ctx.lineTo(trianglepoint[2].x,trianglepoint[2].y)
+            this.ctx.closePath()
+        },
         getPolygonPoints(){
             let angle = this.degreesToRadians(this.getAngleByXandY(this.Location.x,this.Location.y))
             let radiusX = this.ShapeBoundingBox.width
@@ -154,7 +206,7 @@ export default {
         drawRubberbandShape(loc){
             this.ctx.strokeStyle=this.strokeColor
             this.ctx.fillStyle=this.fillColor
-            this.ctx.lineWidth=2
+            this.ctx.lineWidth=this.line_Width
             if(this.currentTool==='brush'){
                 this.drawBrush()
             }
@@ -190,6 +242,11 @@ export default {
                 this.getPolygon()
                 this.ctx.stroke()
                 
+            }else if(this.currentTool==="triangle"){
+                    this.getTriangle()
+                    this.ctx.stroke()
+            }else{
+                this.Selection()
             }
         },
         updateRubberbandOnMove(loc){
@@ -269,6 +326,20 @@ export default {
                     this.ctx.moveTo(object.p1x,object.p1y)
                     this.ctx.lineTo(object.p2x,object.p2y)
                     this.ctx.stroke()
+                }else if(object instanceof triangle){
+                    let m = this.Location.x - object.polpoints[0].x
+                    let n = this.Location.y - object.polpoints[0].y
+                    for(let k=0;k<3;k++){
+                        object.polpoints[k].x +=m
+                        object.polpoints[k].y +=n
+                    }
+                    this.ctx.beginPath()
+                    this.ctx.moveTo(object.polpoints[0].x,object.polpoints[0].y)
+                    this.ctx.lineTo(object.polpoints[1].x,object.polpoints[1].y)
+                    this.ctx.lineTo(object.polpoints[2].x,object.polpoints[2].y)
+                    this.ctx.closePath()
+                    this.ctx.stroke()
+                    
                 }
             
         },
@@ -325,6 +396,20 @@ export default {
                     this.ctx.moveTo(object.p1x,object.p1y)
                     this.ctx.lineTo(object.p2x,object.p2y)
                     this.ctx.stroke()
+                }else if(object instanceof triangle){
+                    object.polpoints[1].x =this.Location.x
+                    object.polpoints[1].y =this.Location.y
+                    var distancex=object.polpoints[0].x-this.Location.x
+                    var distancey=object.polpoints[0].y-this.Location.y
+                    object.polpoints[2].x=this.Location.x-distancex
+                    object.polpoints[2].y=this.Location.y+distancey
+                    this.ctx.beginPath()
+                    this.ctx.moveTo(object.polpoints[0].x,object.polpoints[0].y)
+                    this.ctx.lineTo(object.polpoints[1].x,object.polpoints[1].y)
+                    this.ctx.lineTo(object.polpoints[2].x,object.polpoints[2].y)
+                    this.ctx.closePath()
+                    this.ctx.stroke()
+                    
                 }
             
         },
@@ -338,7 +423,6 @@ export default {
                             this.ctx.beginPath()
                             this.ctx.arc(this.shapes[i].x,this.shapes[i].y,radius,0,Math.PI*2)
                             this.ctx.stroke()
-                      
                         }else if(this.shapes[i] instanceof square){
                             this.ctx.strokeRect(this.shapes[i].x,this.shapes[i].y,this.shapes[i].length,this.shapes[i].length)
                         }else if(this.shapes[i] instanceof rectangle){
@@ -363,6 +447,14 @@ export default {
                             this.ctx.moveTo(this.shapes[i].p1x,this.shapes[i].p1y)
                             this.ctx.lineTo(this.shapes[i].p2x,this.shapes[i].p2y)
                             this.ctx.stroke()
+                        }else if(this.shapes[i] instanceof triangle){
+                            this.ctx.beginPath()
+                            this.ctx.moveTo(this.shapes[i].polpoints[0].x,this.shapes[i].polpoints[0].y)
+                            this.ctx.lineTo(this.shapes[i].polpoints[1].x,this.shapes[i].polpoints[1].y)
+                            this.ctx.lineTo(this.shapes[i].polpoints[2].x,this.shapes[i].polpoints[2].y)
+                            this.ctx.closePath()
+                            this.ctx.stroke()
+                            
                         }
                     }
                 }
@@ -403,6 +495,14 @@ export default {
                     this.ctx.moveTo(object.p1x,object.p1y)
                     this.ctx.lineTo(object.p2x,object.p2y)
                     this.ctx.stroke()
+                }else if(object instanceof triangle){
+                    this.ctx.beginPath()
+                    this.ctx.moveTo(object.polpoints[0].x,object.polpoints[0].y)
+                    this.ctx.lineTo(object.polpoints[1].x,object.polpoints[1].y)
+                    this.ctx.lineTo(object.polpoints[2].x,object.polpoints[2].y)
+                    this.ctx.closePath()
+                    this.ctx.stroke()
+                    
                 }
                 this.ctx.lineWidth=2
         },
@@ -421,21 +521,24 @@ export default {
             else if(this.currentTool==='moving'){
                     this.dragButton = true
                     this.Selection(e)
+                    if(this.currShape!=null){
                     this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
-                    this.saveCanvasImage()
+                    this.saveCanvasImage()}
             }else if(this.currentTool==='resize'){
                     this.resizeButton = true
                     this.Selection(e)
+                    if(this.currShape!=null){
                     this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
                     this.prevDraw(this.currShape)
-                    this.saveCanvasImage()
+                    this.saveCanvasImage()}
             }else if(this.currentTool==='delete'){
                     this.Selection(e)
+                    if(this.currShape!=null){
                     this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
                     this.clearSelected(this.currShape)
                     this.saveCanvasImage()
@@ -445,14 +548,13 @@ export default {
                         if(this.shapes[i].id===this.currShape.id){
                             this.shapes.splice(i,1)
                         }
-                    }
+                    }}
             }
             
         },
         ReactToMouseMove(e){
             this.canvas.style.cursor="crosshair"
             this.Location=this.getMousePosition(e.clientX,e.clientY)
-
             if(this.currentTool==='brush'&&this.dragging&&this.usingBrush){
                 if(this.Location.x>0&&this.Location.x<this.canvasWidth&& this.Location.y>0&&this.Location.y<this.canvasHeight){
                     this.AddBrushPoint(this.Location.x,this.Location.y,true)
@@ -473,8 +575,8 @@ export default {
             }
         },
         ReactToMouseUp(e){
+            //if(!this.changeColor&&!this.changeWidth){
             if(this.currentTool != '' &&this.currentTool != 'moving' && this.currentTool != 'resize') this.AddRecentShape()
-
             this.canvas.style.cursor="default"
             this.Location=this.getMousePosition(e.clientX,e.clientY)
             this.RedrawCanvasImage()
@@ -494,10 +596,12 @@ export default {
             this.usingBrush=false
             this.currShape=null
             console.log(this.shapes)
+            /*else{
+                this.changeColor=false
+                this.changeWidth=false
+            }*/
         },
-
         AddRecentShape(){
-
             if(this.currentTool==="circle" && this.ShapeBoundingBox.width != 0){
                   
                   this.shapes.push(new circle(this.MouseDownPos.x,this.MouseDownPos.y,this.ShapeBoundingBox.width,this.counter++))
@@ -525,11 +629,15 @@ export default {
                   this.shapes.push(new polygon(this.polPoints,this.counter++))
             
             }
+             else if(this.currentTool==="triangle" && this.ShapeBoundingBox.width != 0 &&this.ShapeBoundingBox.height != 0){ //NEW EDITION
+                  
+                  this.shapes.push(new triangle(this.polPoints,this.counter++))
+            
+            }
            
             
         },
     
-
     onSegment(p, q, r)  
              { 
         if (q.x <= Math.max(p.x, r.x) && 
@@ -541,7 +649,6 @@ export default {
              } 
             return false; 
              } ,
-
         orientation(p,q,r)  
                     { 
              
@@ -554,9 +661,7 @@ export default {
             } 
             return (val > 0) ? 1 : 2;  
             } ,
-
          doIntersect(p1,q1,p2,q2)  {
-
         let o1 = this.orientation(p1, q1, p2) 
         let o2 = this.orientation(p1, q1, q2) 
         let o3 = this.orientation(p2, q2, p1) 
@@ -572,7 +677,6 @@ export default {
         { 
             return true; 
         } 
-
         if (o2 == 0 && this.onSegment(p1, q2, q1))  
         {
             return true; 
@@ -588,8 +692,6 @@ export default {
         } 
         return false;  
           } ,
-
-
      isInside(polygon,n,p)   { 
         
         if (n < 3)  
@@ -603,10 +705,8 @@ export default {
         { 
             let next = (i + 1) % n; 
   
-
             if (this.doIntersect(polygon[i], polygon[next], p, extreme))  
             { 
-
                 if (this.orientation(polygon[i], p, polygon[next]) == 0) 
                 { 
                     return this.onSegment(polygon[i], p, 
@@ -622,19 +722,37 @@ export default {
     } , 
   
         
+
+     getTriangleArea(x1,y1,x2,y2,x3,y3) 
+    { 
+       return Math.abs((x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2))/2.0); 
+    },
+    isInsideTriangle(triangle,point){
+         
+      let  totalArea = this.getTriangleArea (triangle[0].x, triangle[0].y, triangle[1].x, triangle[1].y, triangle[2].x, triangle[2].y) 
+       
+       
+      let   A1 = this.getTriangleArea (point.x, point.y,triangle[1].x, triangle[1].y, triangle[2].x, triangle[2].y ) 
+      let   A2 = this.getTriangleArea (triangle[0].x, triangle[0].y,point.x, point.y, triangle[2].x, triangle[2].y )
+      let   A3 = this.getTriangleArea (triangle[0].x, triangle[0].y,triangle[1].x,triangle[1].y,point.x, point.y )
+
+        
+        
+         return(Math.abs(totalArea-(A1+A2+A3))<0.00005)
+
+         } ,
+
         Selection(){
        
            
-           
+            
             let i = this.shapes.length-1
              for( i; i >=0 ; i--){  
-
                  this.currShape=this.shapes[i]
                  
                  if(this.currShape instanceof circle){ //Circle Detection
                 
                  let distance = (Math.sqrt(Math.pow((this.MouseDownPos.x-this.currShape.x),2)+Math.pow((this.MouseDownPos.y-this.currShape.y),2)))
-
                  if(distance<=this.currShape.r){
                       console.log("iam aCircle of id" + this.currShape.id)
                       break
@@ -663,7 +781,6 @@ export default {
                   }
                 else if(this.currShape instanceof line) { // line Detection
                         var slope = (this.currShape.p2y-this.currShape.p1y)/(this.currShape.p2x-this.currShape.p1x)
-
                         
                         if(Math.abs(this.MouseDownPos.y-this.currShape.p1y - slope*(this.MouseDownPos.x-this.currShape.p1x ))<= 5.0 ){
                             console.log("iam a Line of id" + this.currShape.id)
@@ -675,48 +792,118 @@ export default {
                   }
                  else if(this.currShape instanceof ellipse) { // ellipse Detection
 
-                    if(this.currShape.r1>this.currShape.r2){
-                      if( (Math.pow(((this.MouseDownPos.x-this.currShape.x)/(this.currShape.r1)/2),2)+Math.pow(((this.MouseDownPos.y-this.currShape.y)/(this.currShape.r1/2)),2)) <= 1){
-                          console.log("iam a ellipse of id" + this.currShape.id)
-                          break
-                      }
-                      }else{
-                         
-                        if(Math.pow(((this.MouseDownPos.x-this.currShape.x)/this.currShape.r2),2)+Math.pow(((this.MouseDownPos.y-this.currShape.y)/this.currShape.r2),2)<=1){
-                          console.log("iam a ellipse of id" + this.currShape.id)
-                          break
-                      }
-                      }
+
+                   let firstTerm=Math.pow( (Math.cos(Math.PI/4)*(this.MouseDownPos.x-this.currShape.x)+Math.sin(Math.PI/4)*(this.MouseDownPos.y-this.currShape.y)) /this.currShape.r1,2)
+                    let secondTerm=Math.pow( (Math.sin(Math.PI/4)*(this.MouseDownPos.x-this.currShape.x)-Math.cos(Math.PI/4)*(this.MouseDownPos.y-this.currShape.y))/this.currShape.r2,2)
+                    if(firstTerm+secondTerm <= 1){
+                        console.log("Iam ellipse "+ this.currShape.id)
+                        break
+                    }else{
+                        this.currShape=null
+                    }
+
                     }
                  else if(this.currShape instanceof polygon) { // polygon Detection
                     
                     let currClick=new polygonPoint(this.MouseDownPos.x,this.MouseDownPos.y)
                     
                     if(this.isInside(this.currShape.polpoints,6,currClick)){
-
                             console.log("iamPol"+this.currShape.id)
                             break
-                    }  
-   
+                    }  else{
+                      this.currShape=null
+                  
+                         }
+                        }
 
+                    else if(this.currShape instanceof triangle) { // triangle Detection NEW ADDITION
+                    
+                    let currClick=new polygonPoint(this.MouseDownPos.x,this.MouseDownPos.y)
+                    
+                    if(this.isInsideTriangle(this.currShape.polpoints,currClick)){
+                            console.log("iamTriangle"+this.currShape.id)
+                            break
                     }else{
                       this.currShape=null
-                  }
+                         }  
+   
+                    }    
                     
              
                   
             }
-
         }
-
-
     }
 }
 </script>
 <style >
+#title{
+ margin: 1em 0 0.5em 0;
+	color: #343434;
+	font-weight: normal;
+	font-family: 'Ultra', sans-serif;   
+	font-size: 36px;
+	line-height: 42px;
+	text-transform: uppercase;
+	text-shadow: 0 2px white, 0 3px #777;
+}
+#btn-grp{
+  display:flex;
+  justify-content: space-around;
+
+  
+}
+.btn{
+ position: relative;
+  background-color: #020202;
+  border: none;
+  font-size: 18px;
+  color: #63e2d8;
+  padding: 20px;
+  width: 200px;
+  text-align: center;
+  -webkit-transition-duration: 0.4s; /* Safari */
+  transition-duration: 0.4s;
+  overflow: hidden;
+  cursor: pointer;
+
+}
+.btn:after {
+  content: "";
+  background: #21f1d6;
+  display: block;
+  position: absolute;
+  padding-top: 300%;
+  padding-left: 350%;
+  margin-left: -20px!important;
+  margin-top: -120%;
+  opacity: 0;
+  transition: all 0.8s
+}
+
+.btn:active:after {
+  padding: 0;
+  margin: 0;
+  opacity: 1;
+  transition: 0s
+}
+#toolbar{
+  height: 100px;
+  background-color: rgb(73, 210, 219);
+  margin-bottom: 20px;
+}
 #my-canvas{
+
     background-color: white;
-    margin: auto;
+    margin-top: 10px;
+    margin-right: auto;
+    margin-left: auto;
     border :3px solid #000000;
+    display: block;
+}
+#line_width{
+    border :2px solid  rgb(73, 210, 219);
+    padding: 12px;
+    width: 100px;
 }
 </style>
