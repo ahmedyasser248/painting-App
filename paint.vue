@@ -129,7 +129,7 @@ export default {
                             if(String(y[0])=='delete'){
                                 if(String(y[1])=='Model.Circle'){ //Circle Detection      
                                      
-                                     if((Number(y[2])===0) && (Number(y[3])===0)){
+                                     if(Number(y[2])===Number(y[3])){
                                             this.shapes.splice(0, 0,new circle(Number(y[4]),Number(y[5]),Number(y[6]),Number(y[3])) )
                                             this.currShape = this.shapes[0]
                                             this.ctx.beginPath()
@@ -152,7 +152,7 @@ export default {
                                 else if(String(y[1])=='Model.Square') { // Square Detection
                                     
                                     
-                                    if(Number(y[2])===0 && Number(y[2])===Number(y[3])){
+                                    if(Number(y[2])===Number(y[3])){
                                          this.shapes.splice(0, 0,new square(Number(y[4]),Number(y[5]),Number(y[6]),Number(y[3])) )
                                          this.currShape = this.shapes[0]
                                          this.ctx.strokeRect(this.currShape.x,this.currShape.y,this.currShape.length,this.currShape.length)
@@ -173,7 +173,7 @@ export default {
                                 else if(String(y[1])=='Model.Rectangle') { // Square Detection
                                    
                                    
-                                   if(Number(y[2])===0 && Number(y[2])===Number(y[3])){
+                                   if(Number(y[2])===Number(y[3])){
                                             this.shapes.splice(0, 0,new rectangle(Number(y[4]),Number(y[5]),Number(y[6]),Number(y[7]),Number(y[3])) )
                                             
                                          this.currShape = this.shapes[0]
@@ -197,7 +197,7 @@ export default {
                                     
                                 }
                                 else if(String(y[1])=='Model.Line') { // line Detection    
-                                    if(Number(y[2])===0 && Number(y[2])===Number(y[3])){
+                                    if(Number(y[2])===Number(y[3])){
                                         this.shapes.splice(0, 0,new line(Number(y[4]),Number(y[5]),Number(y[6]),Number(y[7]),Number(y[3])) )
                                         this.currShape = this.shapes[0]
                                         this.ctx.beginPath()
@@ -221,7 +221,7 @@ export default {
                                          }
                                 }
                                 else if(String(y[1])=='Model.Ellipse') { // ellipse Detection
-                                   if(Number(y[2])===0 && Number(y[2])===Number(y[3])){
+                                   if(Number(y[2])===Number(y[3])){
                                         this.shapes.splice(0, 0,new ellipse(Number(y[4]),Number(y[5]),Number(y[6]),Number(y[7]),Number(y[3])) )
                                          this.currShape = this.shapes[0]
                                        this.ctx.beginPath()
@@ -244,9 +244,7 @@ export default {
                                
                                     
                                 }
-                                //else if(this.currShape instanceof polygon) { // polygon Detection 
-                                //} 
-
+                                
                             }
                            else{
                              for(let i=0;i<this.shapes.length;i++){
