@@ -15,7 +15,8 @@
  <button class="btn" @click="redo">Redo</button>
 
 <button class="btn" @click="Save" >Save</button>
-<input type="file" id="input" hidden="hidden" webkitdirectory v-once >
+
+  <input type="radio" id="Xml" name="Save" value="Xml">
   <label for="Xml">Xml</label>
   <input type="radio" id="Jason" name="Save" value="Jason" checked="checked"> 
   <label for="Jason">Jason</label>
@@ -145,6 +146,7 @@ export default {
         },
 
         Save(){
+            
             let val
             var radios = document.getElementsByName('Save');
                  for (var i=0, len=radios.length; i<len; i++) {
@@ -153,15 +155,21 @@ export default {
                     break; 
                  }
             }
+            
             console.log(val)
-           // let sendData={
-            //    shapes:this.shapes
-           // }
+            
+            
+            
+            axios.get('http://localhost:8085/Save', {
+            params: {
+              "type" : val,
+                   }
+                    })
+                    .then(response => {
+                            console.log(response.data);
+                     })
 
-            //TODO SENDING THE ARRAY OF SHAPES TO THE BACKEND BY AXIOS
-            //axios.post('https://test.com/api/get_product', sendData)
-
-
+        
         },
 
         Load(){
@@ -175,6 +183,8 @@ export default {
 
             // EQUATING ARRAY WITH THIS.SHAPES ARRAY
         },
+
+
 
         undo(){
             axios.get('http://localhost:8085/undo')
