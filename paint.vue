@@ -16,11 +16,13 @@
 
 <button class="btn" @click="Save" >Save</button>
 
+
   <input type="radio" id="Xml" name="Save" value="Xml">
   <label for="Xml">Xml</label>
-  <input type="radio" id="Jason" name="Save" value="Jason" checked="checked"> 
+  <input type="radio" id="Jason" name="Save" value="Jason"> 
   <label for="Jason">Jason</label>
  <button class="btn" @click="Load" >Load</button>
+ <input  type="file" id="choose">
  <br>
  <input id="color" type="color" class="btn" value="#33EAFF">
  <input id ="line_width" type="number" name="lineWidth" list="linewidth" placeholder="Line width"/>
@@ -44,6 +46,7 @@ export default {
     
     data() {
         return {
+            val:'',
             changeWidth:false,
             changeColor:false,
             first:false,
@@ -124,6 +127,8 @@ export default {
     methods:{
 
         ClearAll(){
+            this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height)
+            this.val=''
             this.changeWidth=false
             this.changeColor=false
             this.first=false
@@ -147,41 +152,72 @@ export default {
 
         Save(){
             
-            let val
             var radios = document.getElementsByName('Save');
-                 for (var i=0, len=radios.length; i<len; i++) {
+                 for (var i=0; i<radios.length; i++) {
                  if ( radios[i].checked ) { 
-                     val = radios[i].value; 
+                     this.val = radios[i].value; 
                     break; 
                  }
+                 if(i===radios.length-1){
+                     alert("Choose the type of the saved file first")
+                 }
             }
+
             
-            console.log(val)
+            if(this.val==='Xml'){
+            axios.get('http://localhost:8085/SaveXml', {
+            params: {
+              "type" : this.val,
+                   }
+                    })
+                    .then(response => {
+                            console.log(response.data)
+                            alert("File saved In Downloads under Name : "+response.data)
+                     })
             
-            
-            
+            }else if(this.val==='Jason'){
             axios.get('http://localhost:8085/Save', {
             params: {
-              "type" : val,
+              "type" : this.val,
                    }
                     })
                     .then(response => {
                             console.log(response.data);
+                            
                      })
+            }      
 
         
         },
 
         Load(){
 
+            let g = document.getElementById("choose").files
+            axios.get('http://localhost:8085/LoadXml', {
+            params: {
+              "type" : g[0].name,
+                   }
+                    })
+                    .then(response => {
+                        console.log(response.data)
+                            /*let s = response.data
+                            this.ClearAll()
+                            for(let i=0;i<s.length;i++){
+                                if(String(s[i])=='Model.Square'){
+                                    this.shapes.push(new square(s.get))
+                                }else if(String(s[i])=='Model.Rectangle'){
+                                    this.shapes.push()
+                                }else if(String(s[i])=='Model.Circle'){
+                                    this.shapes.push()
+                                }else if(String(s[i])=='Model.Line'){
+                                    this.shapes.push()
+                                }else if(String(s[i])=='Model.Ellipse'){
+                                    this.shapes.push()
+                                }
+                            }*/
 
-            //SEND AXIOS TO BRING FILES NAMES
-
-            this.ClearAll()
-
-            //SEND AXIOS TO BRING FILE DATA
-
-            // EQUATING ARRAY WITH THIS.SHAPES ARRAY
+                            
+                     })    
         },
 
 
