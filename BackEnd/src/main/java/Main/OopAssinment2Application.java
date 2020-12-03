@@ -1,5 +1,8 @@
 package Main;
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
 import java.io.*;
+import java.util.ArrayList;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -13,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import Model.IShape;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -20,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import Services.DrawingManager;
 import Services.Save;
+
 
 @SpringBootApplication
 @CrossOrigin
@@ -30,6 +36,8 @@ public class OopAssinment2Application {
 	public static void main(String[] args) {
 		SpringApplication.run(OopAssinment2Application.class, args);
 	}
+
+	ArrayList<IShape> loaded= new ArrayList<>();
 
 	DrawingManager draw = DrawingManager.getInstance();
 
@@ -223,4 +231,50 @@ public class OopAssinment2Application {
 		return type;
 
 }
+public int i=1;
+	@GetMapping("/SaveXml")
+	public String saveXml(@RequestParam String type){
+		ArrayList<IShape> ch = draw.getshapes();
+		String name = "Draw"+i+".xml";
+		String home = System.getProperty("user.home");
+		home = home + "\\Downloads\\"+name;
+		try{
+			File f = new File(home);
+			FileOutputStream fos = new FileOutputStream(f);
+			i++;
+			XMLEncoder enc = new XMLEncoder(fos);
+			enc.writeObject(ch);
+			enc.close();
+			fos.close();
+		}catch(IOException ex){
+			ex.printStackTrace();
+		}
+	
+		
+		return name;
+	}
+
+	public boolean load = false;
+
+	@GetMapping("/LoadXml")
+	public ArrayList<IShape> loadXml(@RequestParam String type) {
+		load=true;
+		String home = System.getProperty("user.home");
+		home = home +"\\Downloads\\"+type;
+		try{	
+			FileInputStream fis = new FileInputStream(home);
+				XMLDecoder dec = new XMLDecoder(fis);
+				loaded = (ArrayList<IShape>) dec.readObject();
+				draw.clearAllUndoAndRedo();
+				draw.loadSHapes(loaded);
+				dec.close();
+				fis.close();
+		}catch(IOException ex){
+			ex.printStackTrace();
+		}
+		
+	
+		
+		return loaded;
+	}
 }

@@ -304,6 +304,16 @@ public class DrawingManager {
 		}
 
 	}
+	public void clearAllUndoAndRedo(){
+		this.undo.clear();
+		this.redo.clear();
+		this.redoId.clear();
+		this.undoId.clear();
+	}
+	public void loadSHapes(ArrayList<IShape> l){
+		this.shapes.clear();
+		this.shapes=l;
+	}
 
 	public ArrayList<IShape> getshapes(){
 		return this.shapes;
